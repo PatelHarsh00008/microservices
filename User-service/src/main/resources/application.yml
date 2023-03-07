@@ -1,0 +1,103 @@
+server:
+  port: 8081
+  
+spring:
+  application:
+    name: USER-SERVICE
+  datasource:
+    url: jdbc:mysql://localhost:3306/microservices
+    username: root
+    password: Loc@lHost
+    driver-class-name: com.mysql.jdbc.Driver
+    
+  config:
+    import: optional:configserver:http://localhost:8085
+  
+  # spring security configuration
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: https://dev-05102150.okta.com/oauth2/default
+      client:
+        registration:
+          my-internal-client:
+            provider: okta
+            authorization-grant-type: client_credentials
+            scope: internal
+            client-id: 0oa8l3l092ePWig955d7
+            client-secret: q8GfF3NU2hTN0pvO1DTwXI_jv0ZY1S23ZtMoVT0L
+            
+        provider:
+          okta:
+            issuer-uri: https://dev-05102150.okta.com/oauth2/default
+              
+            
+            
+#  profiles:
+#    active:
+#    - dev
+# spring.config.import= optional:configserver:http://localhost:8085 // in application.properties
+  
+#  application: 
+#    name: USER-SERVICE
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+#eureka:
+#  instance:
+#    prefer-ip-address: true
+#  client:
+#    fetch-registry: true
+#    register-with-eureka: true
+#    service-url:
+#      defaultZone: http://localhost:8761/eureka
+
+management:
+  health:
+    circuitbreakers:
+      enabled: true #To enable the circuit breaker
+  endpoints:
+    web:
+      exposure:
+        include: health
+        
+  endpoint:
+    health:
+      show-details: always
+      
+      
+resilience4j:
+  circuitbreaker:
+    instances:
+      ratingHotelBreaker:
+        registerHealthIndicator: true
+        eventConsumerBufferSize: 10
+        failureRateThreshold: 50
+        minimumNumberOfCalls: 5
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        waitDurationInOpenState: 6s
+        permittedNumberOfCallsInHalfOpenState: 3
+        slidingWindowSize: 10
+        slidingWindowType: COUNT_BASED
+        
+  retry:
+    instances:
+      ratingHotelService:
+        max-attempts: 3
+        wait-duration: 5s
+  
+  ratelimiter:
+    instances:
+      userRateLimiter:
+        limit-refresh-period: 4s
+        limit-for-period: 2
+        timeout-duration: 2s      
+ 
+okta:
+  oauth2:
+    issuer: https://dev-05102150.okta.com/oauth2/default
+    audience: api://default     
